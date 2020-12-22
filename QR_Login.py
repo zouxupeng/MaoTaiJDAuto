@@ -14,6 +14,8 @@ from timer import Timer
 from bs4 import BeautifulSoup
 from util import *
 from JDException import JDException
+import asyncio
+from pyppeteer import launch
 
 class JDLogin(object):
     def __init__(self):
@@ -22,7 +24,12 @@ class JDLogin(object):
         self.user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36'
         self.headers = {'User-Agent': self.user_agent}
         self.nick_name = ''
+        self.eid = ''
+        self.fp = ''
         self.isLogin = self.JD_LoadCookie();
+        # self.JD_GetEidFP();
+        asyncio.get_event_loop().run_until_complete(self.JD_GetEidFP())
+        print("eid: %s \nfp: %s" % (self.eid, self.fp));
 
     def JD_RQ_login(self):
         if self.isLogin:
@@ -91,7 +98,6 @@ class JDLogin(object):
         else:
             print(resp_json)
             return False
-
 
 # 获取登录页面
     def get_login_page(self):
@@ -187,6 +193,28 @@ class JDLogin(object):
         self.session.cookies.update(local_cookies)
         print("是否登录？ %d" % self.JD_ValidateCookie())
         return self.JD_ValidateCookie();
+
+    async def JD_GetEidFP(self):
+        browser = await launch(headless=True)
+        page = await browser.newPage()
+        # 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Mobile Safari/537.36'
+        await page.setUserAgent(self.user_agent)
+        await page.goto('https://passport.jd.com/new/login.aspx')
+        await asyncio.sleep(2)
+        eid = '';
+        fp = '';
+        eidElements = await page.xpath("//*[@id=\"eid\"]")
+        for item in eidElements:
+            eid = await (await item.getProperty('value')).jsonValue();
+        #        print(eid)
+        fpElements = await page.xpath("//*[@id=\"sessionId\"]")
+        for item in fpElements:
+            fp = await (await item.getProperty('value')).jsonValue();
+        #        print(fp)
+        # print("eid: %s \nfp: %s" % (eid, fp));
+        self.eid = eid;
+        self.fp = fp;
+        await browser.close()
 
 
     def response_status(self,resp):

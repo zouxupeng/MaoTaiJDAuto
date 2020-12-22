@@ -8,11 +8,14 @@ import requests
 from util import parse_json, get_session, get_sku_title,send_wechat
 from config import global_config
 import json
+from  QR_Login import JDLogin
 
 class Jd_Mask_Spider(object):
     def __init__(self):
         # 初始化信息
-        self.session = get_session()
+        # self.session = get_session()
+        login = JDLogin();
+        self.session = login.session;
         self.sku_id = global_config.getRaw('config', 'sku_id')
         self.seckill_init_info = dict()
         self.seckill_url = dict()
@@ -29,8 +32,10 @@ class Jd_Mask_Spider(object):
                 }
                 resp = self.session.get(
                     url=targetURL, params=payload, allow_redirects=False)
+                print(resp);
                 if resp.status_code == requests.codes.OK:
                     logger.info('校验是否登录[成功]')
+                    print("+++++++")
                     logger.info('用户:{}'.format(self.get_username()))
                     return True
                 else:
@@ -88,7 +93,9 @@ class Jd_Mask_Spider(object):
         }
         try:
             resp = self.session.get(url=url, params=payload, headers=headers)
+            print("ppppppp")
             resp_json = parse_json(resp.text)
+            print("--------")
             # 响应中包含了许多用户信息，现在在其中返回昵称
             # jQuery2381773({"imgUrl":"//storage.360buyimg.com/i.imageUpload/xxx.jpg","lastLoginTime":"","nickName":"xxx","plusStatus":"0","realName":"xxx","userLevel":x,"userScoreVO":{"accountScore":xx,"activityScore":xx,"consumptionScore":xxxxx,"default":false,"financeScore":xxx,"pin":"xxx","riskScore":x,"totalScore":xxxxx}})
             return resp_json.get('nickName') or 'jd'

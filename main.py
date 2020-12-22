@@ -1,9 +1,20 @@
 import sys
 from jd_mask_spider_requests import Jd_Mask_Spider
 from QR_Login import JDLogin
-
+import  os
 
 if __name__ == '__main__':
+
+    #删除cookies
+    cookiePath = './cookies'
+    isexits = os.path.exists(cookiePath)
+    if isexits:
+        print("存在")
+        for root, dirs, files in os.walk(cookiePath):
+            print(files);
+            for fileName in files:
+                del_file = os.path.join(root, fileName)
+                os.remove(del_file)
     login = JDLogin();
     if login.JD_RQ_login():
         print("登录完成~")
